@@ -1,0 +1,15 @@
+server:
+  applicationConnectors:
+    - type: http
+      port: 26062
+  adminConnectors:
+    - type: http
+      port: 26162
+
+logging:
+  level: INFO
+  loggers:
+    com.robxrocks: DEBUG
+
+swagger:
+  resourcePackage: com.robxrocks.simple.bidding.agent
