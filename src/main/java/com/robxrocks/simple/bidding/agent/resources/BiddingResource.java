@@ -5,7 +5,11 @@ import com.robxrocks.simple.bidding.agent.api.BiddingResponse;
 import com.robxrocks.simple.bidding.agent.db.CoefficientDao;
 import com.robxrocks.simple.bidding.agent.util.BiddingHelper;
 import com.robxrocks.simple.bidding.agent.util.PredictionCalculator;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import lombok.Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +21,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -50,15 +53,14 @@ public class BiddingResource {
     })
     public Response predictCTR(@ApiParam(value = "Bidding Request", required = true)
                                @Valid final BiddingRequest biddingRequest) {
-        BiddingResponse response;
+        String ctrPrediction;
 
         try {
             Map<String, String> coefficients = coefficientDao.getCoefficients(biddingRequest);
 
             List<Double> convertedCoefficients = biddingHelper.convertCoefficients(coefficients);
 
-            String ctrPrediction = predictionCalculator.calculateCTR(convertedCoefficients).toString();
-            response = BiddingResponse.builder().ctr(ctrPrediction).build();
+            ctrPrediction = predictionCalculator.calculateCTR(convertedCoefficients).toString();
 
         } catch (Exception ex) {
             LOGGER.error("CTR could not be predicted due to unexpexted exception: {}", ex.getMessage());
@@ -69,7 +71,7 @@ public class BiddingResource {
             }
         }
 
-        return Response.ok(response).build();
+        return Response.ok(BiddingResponse.builder().ctr(ctrPrediction).build()).build();
     }
 
 }
