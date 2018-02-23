@@ -63,7 +63,7 @@ public class BiddingResource {
             ctrPrediction = predictionCalculator.calculateCTR(convertedCoefficients).toString();
 
         } catch (Exception ex) {
-            LOGGER.error("CTR could not be predicted due to unexpexted exception: {}", ex.getMessage());
+            LOGGER.error("CTR could not be predicted due to unexpected exception: {}", ex.getMessage());
             if (ex instanceof IllegalArgumentException) {
                 return Response.status(Response.Status.BAD_REQUEST).build();
             } else {
