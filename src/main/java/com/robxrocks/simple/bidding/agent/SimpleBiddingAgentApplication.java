@@ -10,7 +10,6 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import redis.clients.jedis.Jedis;
 
 public class SimpleBiddingAgentApplication extends Application<SimpleBiddingAgentConfiguration> {
 
