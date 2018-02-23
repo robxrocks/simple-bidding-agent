@@ -40,13 +40,6 @@ public class BiddingResource {
     @NotNull
     private PredictionCalculator predictionCalculator;
 
-    private final String REDIS_FIELD_NAME = "model";
-    private final String DEVICE_EXT_BROWSER_KEY = "deviceExtBrowser";
-    private final String BANNER_EXT_SIZE_KEY = "bannerExtSize";
-    private final String DEVICE_LANGUAGE_KEY = "deviceLanguage";
-    private final String DEVICE_EXT_TYPE = "deviceExtType";
-    private final String BIAS = "bias";
-
     @POST
     @Consumes(APPLICATION_JSON)
     @ApiOperation(value = "Predicts a click through rate (CTR)", notes = "Predicts a click through rate for given features")
@@ -60,17 +53,7 @@ public class BiddingResource {
         BiddingResponse response;
 
         try {
-            Map<String, String> requestParams = new HashMap<>();
-            requestParams.put(DEVICE_EXT_BROWSER_KEY, biddingRequest.getDeviceExtBrowser());
-            requestParams.put(BANNER_EXT_SIZE_KEY, biddingRequest.getBannerExtSize());
-            requestParams.put(DEVICE_LANGUAGE_KEY, biddingRequest.getDeviceLanguage());
-            requestParams.put(DEVICE_EXT_TYPE, biddingRequest.getDeviceExtType());
-
-            Map<String, String> coefficients = new HashMap<>();
-            requestParams.forEach((key, value) ->
-                coefficients.put(key, coefficientDao.hget(REDIS_FIELD_NAME, key + "=" + value))
-            );
-            coefficients.put(BIAS, coefficientDao.hget(REDIS_FIELD_NAME, BIAS));
+            Map<String, String> coefficients = coefficientDao.getCoefficients(biddingRequest);
 
             List<Double> convertedCoefficients = biddingHelper.convertCoefficients(coefficients);
 

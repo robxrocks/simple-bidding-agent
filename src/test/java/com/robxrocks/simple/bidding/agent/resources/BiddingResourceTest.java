@@ -9,6 +9,8 @@ import org.junit.Test;
 
 import javax.ws.rs.core.Response;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
@@ -34,7 +36,7 @@ public class BiddingResourceTest {
                 .predictionCalculator(predictionCalculator)
                 .build();
 
-        when(coefficientDao.hget(anyString(), anyString())).thenReturn("1.0");
+        when(coefficientDao.getCoefficients(anyObject())).thenReturn(Collections.emptyMap());
         when(biddingHelper.convertCoefficients(anyMap())).thenReturn(Arrays.asList(1.0));
         when(predictionCalculator.calculateCTR(anyList())).thenReturn(1.0);
     }
@@ -50,7 +52,7 @@ public class BiddingResourceTest {
 
         Response response = resource.predictCTR(request);
 
-        verify(coefficientDao, times(5)).hget(anyString(),anyString());
+        verify(coefficientDao, times(1)).getCoefficients(anyObject());
         verify(biddingHelper, times(1)).convertCoefficients(anyMap());
         verify(predictionCalculator, times(1)).calculateCTR(anyList());
         assertThat(response.getStatus(), is(200));
