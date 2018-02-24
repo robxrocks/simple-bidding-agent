@@ -2,14 +2,10 @@ package com.robxrocks.simple.bidding.agent.resources;
 
 import com.robxrocks.simple.bidding.agent.api.BiddingRequest;
 import com.robxrocks.simple.bidding.agent.api.BiddingResponse;
-import com.robxrocks.simple.bidding.agent.db.CoefficientDao;
 import com.robxrocks.simple.bidding.agent.util.BiddingHelper;
+import com.robxrocks.simple.bidding.agent.util.CoefficientDaoClient;
 import com.robxrocks.simple.bidding.agent.util.PredictionCalculator;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.*;
 import lombok.Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +31,7 @@ public class BiddingResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(BiddingResource.class);
 
     @NotNull
-    private CoefficientDao coefficientDao;
+    private CoefficientDaoClient coefficientDaoClient;
 
     @NotNull
     private BiddingHelper biddingHelper;
@@ -52,11 +48,15 @@ public class BiddingResource {
             @ApiResponse(code = 500, message = "Internal Server Error")
     })
     public Response predictCTR(@ApiParam(value = "Bidding Request", required = true)
-                               @Valid final BiddingRequest biddingRequest) {
+                               @Valid final BiddingRequest request) {
         String ctrPrediction;
 
         try {
-            Map<String, String> coefficients = coefficientDao.getCoefficients(biddingRequest);
+            Map<String, String> coefficients = coefficientDaoClient.getCoefficients(
+                    request.getDeviceExtBrowser(),
+                    request.getBannerExtSize(),
+                    request.getDeviceLanguage(),
+                    request.getDeviceExtType());
 
             List<Double> convertedCoefficients = biddingHelper.convertCoefficients(coefficients);
 
