@@ -7,16 +7,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.robxrocks.simple.bidding.agent.BiddingFixtures.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 public class PredictionCalculatorTest {
-
-    private Double deviceExtBrowserFirefox = -0.1131013246;
-    private Double bannerExtSize300x250 = -0.6282185905;
-    private Double deviceLanguageDe = -0.1935418172;
-    private Double deviceExtTypeTablet = 0.7294739471;
-    private Double bias = -6.21176449;
 
     private PredictionCalculator specUnderTest;
 
@@ -27,24 +22,25 @@ public class PredictionCalculatorTest {
 
     @Test
     public void testCalculateCTR_Success() {
+        Double expectedCTR = 0.0016306374;
         List<Double> params = new ArrayList<>(Arrays.asList(
-                deviceExtBrowserFirefox,
-                bannerExtSize300x250,
-                deviceLanguageDe,
-                deviceExtTypeTablet,
-                bias));
+                Double.valueOf(DEVICE_EXT_BROWSER_COEFFICIENT),
+                Double.valueOf(BANNER_EXT_SIZE_COEFFICIENT),
+                Double.valueOf(DEVICE_LANGUAGE_COEFFICIENT),
+                Double.valueOf(DEVICE_EXT_TYPE_COEFFICIENT),
+                Double.valueOf(BIAS_COEFFICIENT)));
         Double result = specUnderTest.calculateCTR(params);
-        assertThat(result, is(0.0016306374));
+        assertThat(result, is(expectedCTR));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testCalculateCTRWithNullValue_Error() {
         List<Double> params = new ArrayList<>(Arrays.asList(
                 null,
-                bannerExtSize300x250,
-                deviceLanguageDe,
-                deviceExtTypeTablet,
-                bias));
+                Double.valueOf(BANNER_EXT_SIZE_COEFFICIENT),
+                Double.valueOf(DEVICE_LANGUAGE_COEFFICIENT),
+                Double.valueOf(DEVICE_EXT_TYPE_COEFFICIENT),
+                Double.valueOf(BIAS_COEFFICIENT)));
         specUnderTest.calculateCTR(params);
     }
 

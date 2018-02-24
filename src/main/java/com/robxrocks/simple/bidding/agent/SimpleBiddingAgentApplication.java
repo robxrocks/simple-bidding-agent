@@ -4,6 +4,7 @@ import com.robxrocks.simple.bidding.agent.db.CoefficientDao;
 import com.robxrocks.simple.bidding.agent.db.CoefficientDaoRedis;
 import com.robxrocks.simple.bidding.agent.resources.BiddingResource;
 import com.robxrocks.simple.bidding.agent.util.BiddingHelper;
+import com.robxrocks.simple.bidding.agent.util.CoefficientDaoClient;
 import com.robxrocks.simple.bidding.agent.util.PredictionCalculator;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
@@ -13,7 +14,7 @@ import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 
 public class SimpleBiddingAgentApplication extends Application<SimpleBiddingAgentConfiguration> {
 
-    private CoefficientDao coefficientDao;
+    private CoefficientDaoClient coefficientDaoClient;
     private BiddingHelper biddingHelper;
     private PredictionCalculator predictionCalculator;
 
@@ -39,8 +40,9 @@ public class SimpleBiddingAgentApplication extends Application<SimpleBiddingAgen
     @Override
     public void run(final SimpleBiddingAgentConfiguration configuration,
                     final Environment environment) {
-        if (null == coefficientDao) {
-            coefficientDao = new CoefficientDaoRedis();
+        if (null == coefficientDaoClient) {
+            CoefficientDao coefficientDao = new CoefficientDaoRedis();
+            coefficientDaoClient = new CoefficientDaoClient(coefficientDao);
         }
         if (null == biddingHelper) {
             biddingHelper = new BiddingHelper();
@@ -50,7 +52,7 @@ public class SimpleBiddingAgentApplication extends Application<SimpleBiddingAgen
         }
 
         environment.jersey().register(BiddingResource.builder()
-                .coefficientDao(coefficientDao)
+                .coefficientDaoClient(coefficientDaoClient)
                 .biddingHelper(biddingHelper)
                 .predictionCalculator(predictionCalculator)
                 .build());

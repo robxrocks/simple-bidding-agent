@@ -2,8 +2,8 @@ package com.robxrocks.simple.bidding.agent.resources;
 
 import com.robxrocks.simple.bidding.agent.api.BiddingRequest;
 import com.robxrocks.simple.bidding.agent.api.BiddingResponse;
-import com.robxrocks.simple.bidding.agent.db.CoefficientDao;
 import com.robxrocks.simple.bidding.agent.util.BiddingHelper;
+import com.robxrocks.simple.bidding.agent.util.CoefficientDaoClient;
 import com.robxrocks.simple.bidding.agent.util.PredictionCalculator;
 import io.swagger.annotations.*;
 import lombok.Builder;
@@ -17,7 +17,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,20 +31,13 @@ public class BiddingResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(BiddingResource.class);
 
     @NotNull
-    private CoefficientDao coefficientDao;
+    private CoefficientDaoClient coefficientDaoClient;
 
     @NotNull
     private BiddingHelper biddingHelper;
 
     @NotNull
     private PredictionCalculator predictionCalculator;
-
-    private final String REDIS_FIELD_NAME = "model";
-    private final String DEVICE_EXT_BROWSER_KEY = "deviceExtBrowser";
-    private final String BANNER_EXT_SIZE_KEY = "bannerExtSize";
-    private final String DEVICE_LANGUAGE_KEY = "deviceLanguage";
-    private final String DEVICE_EXT_TYPE = "deviceExtType";
-    private final String BIAS = "bias";
 
     @POST
     @Consumes(APPLICATION_JSON)
@@ -56,29 +48,22 @@ public class BiddingResource {
             @ApiResponse(code = 500, message = "Internal Server Error")
     })
     public Response predictCTR(@ApiParam(value = "Bidding Request", required = true)
-                               @Valid final BiddingRequest biddingRequest) {
-        BiddingResponse response;
+                               @Valid final BiddingRequest request) {
+        String ctrPrediction;
 
         try {
-            Map<String, String> requestParams = new HashMap<>();
-            requestParams.put(DEVICE_EXT_BROWSER_KEY, biddingRequest.getDeviceExtBrowser());
-            requestParams.put(BANNER_EXT_SIZE_KEY, biddingRequest.getBannerExtSize());
-            requestParams.put(DEVICE_LANGUAGE_KEY, biddingRequest.getDeviceLanguage());
-            requestParams.put(DEVICE_EXT_TYPE, biddingRequest.getDeviceExtType());
-
-            Map<String, String> coefficients = new HashMap<>();
-            requestParams.forEach((key, value) ->
-                coefficients.put(key, coefficientDao.hget(REDIS_FIELD_NAME, key + "=" + value))
-            );
-            coefficients.put(BIAS, coefficientDao.hget(REDIS_FIELD_NAME, BIAS));
+            Map<String, String> coefficients = coefficientDaoClient.getCoefficients(
+                    request.getDeviceExtBrowser(),
+                    request.getBannerExtSize(),
+                    request.getDeviceLanguage(),
+                    request.getDeviceExtType());
 
             List<Double> convertedCoefficients = biddingHelper.convertCoefficients(coefficients);
 
-            String ctrPrediction = predictionCalculator.calculateCTR(convertedCoefficients).toString();
-            response = BiddingResponse.builder().ctr(ctrPrediction).build();
+            ctrPrediction = predictionCalculator.calculateCTR(convertedCoefficients).toString();
 
         } catch (Exception ex) {
-            LOGGER.error("CTR could not be predicted due to unexpexted exception: {}", ex.getMessage());
+            LOGGER.error("CTR could not be predicted due to unexpected exception: {}", ex.getMessage());
             if (ex instanceof IllegalArgumentException) {
                 return Response.status(Response.Status.BAD_REQUEST).build();
             } else {
@@ -86,7 +71,7 @@ public class BiddingResource {
             }
         }
 
-        return Response.ok(response).build();
+        return Response.ok(BiddingResponse.builder().ctr(ctrPrediction).build()).build();
     }
 
 }
